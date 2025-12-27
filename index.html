@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard Presensi Guru</title>
+    <title>Presensi Guru & Karyawan - SMP Negeri 4 Majenang</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
     <style>
@@ -11,177 +11,312 @@
         body { font-family: 'Inter', sans-serif; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .loader {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4f46e5;
-            border-radius: 50%;
-            width: 20px;
-            height: 20px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .login-overlay { display: flex; }
+        .hidden-view { display: none !important; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
 
-    <div class="flex h-screen overflow-hidden">
+    <!-- Login/Portal Selection Overlay -->
+    <div id="portal-overlay" class="fixed inset-0 bg-indigo-900 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+            <div class="text-center mb-8">
+                <!-- Logo WhatsApp Menggunakan Lucide Message-Square -->
+                <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-50 shadow-inner">
+                    <i data-lucide="message-circle" class="text-green-600 w-10 h-10 fill-green-600"></i>
+                </div>
+                <!-- Judul Diubah Menjadi Biru -->
+                <h1 class="text-2xl font-bold text-indigo-700 tracking-tight">Presensi Guru - Karyawan</h1>
+                <h2 class="text-lg font-semibold text-blue-700 -mt-1 ">SMP Negeri 4 Majenang</h2>
+                <p class="text-gray-500 text-sm mt-1">Sistem Presensi Berbasis WhatsApp</p>
+            </div>
+            
+            <div class="space-y-4">
+                <button onclick="enterAs('guru')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-green-500 hover:bg-green-50 transition group">
+                    <div class="flex items-center">
+                        <i data-lucide="user" class="mr-3 text-gray-400 group-hover:text-green-600"></i>
+                        <span class="font-semibold text-gray-700">Masuk sebagai Guru/Karyawan</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-300"></i>
+                </button>
+                
+                <button onclick="enterAs('admin')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition group">
+                    <div class="flex items-center">
+                        <i data-lucide="shield-check" class="mr-3 text-gray-400 group-hover:text-indigo-600"></i>
+                        <span class="font-semibold text-gray-700">Masuk sebagai Admin</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="text-gray-300"></i>
+                </button>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <p class="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Terintegrasi dengan WhaCenter</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Guru Modal -->
+    <div id="guru-login-modal" class="fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
+            <h3 class="text-lg font-bold mb-2 flex items-center text-indigo-700">
+                <i data-lucide="phone" class="mr-2 text-green-600 w-5 h-5"></i> Cek Rekap Saya
+            </h3>
+            <p class="text-xs text-gray-500 mb-4 font-medium uppercase">SMP NEGERI 4 MAJENANG</p>
+            <p class="text-xs text-gray-400 mb-4">Masukkan nomor WhatsApp yang Anda gunakan untuk presensi di sekolah.</p>
+            <input type="text" id="guruWaInput" placeholder="Contoh: 62812345678" class="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-green-500">
+            <div class="flex gap-2">
+                <button onclick="closeGuruModal()" class="flex-1 py-2 text-gray-400 font-medium">Batal</button>
+                <button onclick="loginGuru()" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md">Tampilkan Data</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container" class="flex h-screen overflow-hidden hidden-view">
         <!-- Sidebar -->
         <aside class="w-64 bg-indigo-900 text-white flex-shrink-0 hidden md:flex flex-col">
-            <div class="p-6 font-bold text-xl tracking-wider border-b border-indigo-800 flex items-center">
-                <i data-lucide="map-pin" class="mr-2"></i> PRESENSI GPS
+            <div class="p-6 border-b border-indigo-800">
+                <div class="font-bold text-xl tracking-wider flex items-center">
+                    <i data-lucide="map-pin" class="mr-2"></i> <span id="sidebar-title">ADMIN PANEL</span>
+                </div>
+                <p class="text-[10px] text-indigo-300 mt-1 uppercase font-semibold">SMP Negeri 4 Majenang</p>
             </div>
             <nav class="flex-1 p-4 space-y-2">
                 <button onclick="showTab('rekap')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
-                    <i data-lucide="layout-dashboard" class="mr-3"></i> Rekap Harian
+                    <i data-lucide="calendar" class="mr-3"></i> Rekap Presensi
                 </button>
-                <button onclick="showTab('database')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
-                    <i data-lucide="users" class="mr-3"></i> Database Guru
+                <button id="menu-db" onclick="showTab('database')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
+                    <i data-lucide="database" class="mr-3"></i> Database Pegawai
                 </button>
-                <button onclick="showTab('settings')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
-                    <i data-lucide="settings" class="mr-3"></i> API & Jangkauan
+                <button id="menu-settings" onclick="showTab('settings')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
+                    <i data-lucide="cog" class="mr-3"></i> Konfigurasi API
                 </button>
+                <div class="pt-10">
+                    <button onclick="logout()" class="w-full flex items-center p-3 rounded-lg text-red-300 hover:bg-red-900/30 transition">
+                        <i data-lucide="log-out" class="mr-3"></i> Keluar Sistem
+                    </button>
+                </div>
             </nav>
-            <div class="p-4 text-xs text-indigo-300 border-t border-indigo-800">
-                v1.1 Hosted on GitHub
-            </div>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto p-4 md:p-8">
             <!-- Header Mobile -->
-            <div class="md:hidden flex justify-between items-center mb-6">
-                <h1 class="text-2xl font-bold text-indigo-900">Presensi GPS</h1>
-                <button class="p-2 bg-white rounded-lg shadow"><i data-lucide="menu"></i></button>
+            <div class="md:hidden flex justify-between items-center mb-6 bg-white p-4 rounded-xl shadow-sm">
+                <div>
+                    <h1 class="text-lg font-bold text-indigo-700 flex items-center">
+                        <i data-lucide="message-circle" class="mr-2 text-green-600 w-5 h-5"></i> 
+                        <span id="mobile-title">Presensi</span>
+                    </h1>
+                    <p class="text-[8px] font-bold text-indigo-600 uppercase">SMP Negeri 4 Majenang</p>
+                </div>
+                <button onclick="logout()" class="p-2 text-red-600"><i data-lucide="log-out"></i></button>
             </div>
 
             <!-- Tab: Rekap Harian -->
             <div id="rekap" class="tab-content active">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <h2 class="text-2xl font-semibold text-gray-800">Rekap Presensi Harian</h2>
-                    <div class="flex gap-2">
-                        <button onclick="fetchData()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center transition">
-                            <i data-lucide="refresh-cw" id="refresh-icon" class="mr-2 w-4"></i> <span id="btn-text">Refresh Data</span>
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-800" id="content-title">Rekap Presensi Harian</h2>
+                        <p class="text-sm text-gray-500" id="content-subtitle">Menampilkan riwayat sharelock dari WhatsApp</p>
+                    </div>
+                    <div class="flex gap-2 w-full md:w-auto">
+                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari data..." class="p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64">
+                        <button onclick="fetchData()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center transition shadow-md">
+                            <i data-lucide="refresh-cw" id="refresh-icon" class="mr-2 w-4"></i> <span id="btn-text">Refresh</span>
                         </button>
                     </div>
                 </div>
                 
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left">
+                        <table class="w-full text-left" id="attendanceTable">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th class="p-4 font-semibold text-gray-600">Tanggal</th>
-                                    <th class="p-4 font-semibold text-gray-600">Nama Guru</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-center">Datang</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-center">Pulang</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-center">Status</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Tanggal</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Nama</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jam Datang</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jam Pulang</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jarak</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="rekapTableBody">
-                                <tr><td colspan="5" class="p-8 text-center text-gray-400 italic">Silakan hubungkan API di menu Pengaturan...</td></tr>
+                                <tr><td colspan="6" class="p-12 text-center text-gray-400 italic">Menghubungkan ke database...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab: Database Guru -->
+            <!-- Tab: Database Info -->
             <div id="database" class="tab-content">
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-semibold text-gray-800">Database Guru</h2>
-                </div>
-                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg text-blue-800 mb-6">
-                    Manajemen Database Guru dilakukan melalui Google Sheet secara langsung untuk sinkronisasi data real-time dengan WhatsApp Bot.
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="teacherGrid">
-                    <!-- Guru data will be populated here -->
+                <h2 class="text-2xl font-semibold text-gray-800 mb-4">Pengelolaan Database Pegawai</h2>
+                <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
+                    <div class="flex items-center mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
+                        <i data-lucide="external-link" class="text-indigo-600 mr-4"></i>
+                        <p class="text-indigo-900 text-sm">Manajemen data (Tambah/Hapus Guru & Karyawan) tetap dilakukan melalui tab <b>Database_Guru</b> di Google Spreadsheet Admin.</p>
+                    </div>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        Data disinkronkan secara real-time. Jika Anda baru saja mengubah data di spreadsheet, silakan tekan tombol <b>Refresh</b> pada menu Rekap Harian.
+                    </p>
                 </div>
             </div>
 
             <!-- Tab: Settings -->
             <div id="settings" class="tab-content">
-                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Konfigurasi GitHub & API</h2>
+                <h2 class="text-2xl font-semibold text-gray-800 mb-6">Konfigurasi Sistem</h2>
                 <div class="max-w-2xl bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                    <div class="space-y-4">
+                    <div class="space-y-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">Google Apps Script Web App URL</label>
-                            <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <p class="text-xs text-gray-500 mt-1 italic">*Dapatkan URL ini dari menu Deploy di Google Apps Script.</p>
+                            <label class="block text-sm font-bold text-gray-700 mb-2 italic">URL Web App (Google Apps Script)</label>
+                            <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs">
                         </div>
-                        <button onclick="saveSettings()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition">
-                            Simpan & Hubungkan
+                        <div class="p-4 bg-gray-50 rounded-lg">
+                            <h4 class="text-sm font-bold mb-2">Panduan Cepat:</h4>
+                            <ul class="text-xs text-gray-600 space-y-2 list-disc pl-4">
+                                <li>Pastikan Apps Script telah di-deploy sebagai "Web App".</li>
+                                <li>Setel "Who has access" ke "Anyone".</li>
+                                <li>Simpan URL deployment di sini untuk menghubungkan dashboard.</li>
+                            </ul>
+                        </div>
+                        <button onclick="saveSettings()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg">
+                            Hubungkan Database
                         </button>
                     </div>
                 </div>
             </div>
-
         </main>
     </div>
 
     <script>
         lucide.createIcons();
+        let allData = [];
+        let userRole = 'admin';
+        let currentUserWa = '';
 
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
+        function enterAs(role) {
+            if (role === 'guru') {
+                document.getElementById('guru-login-modal').style.display = 'flex';
+            } else {
+                const pass = prompt("Masukkan Password Admin:");
+                if (pass === 'admin123') {
+                    userRole = 'admin';
+                    setupUI();
+                } else if (pass !== null) {
+                    alert("Password salah!");
+                }
+            }
+        }
+
+        function closeGuruModal() {
+            document.getElementById('guru-login-modal').style.display = 'none';
+        }
+
+        function loginGuru() {
+            const wa = document.getElementById('guruWaInput').value.trim();
+            if (!wa) return alert("Silakan masukkan nomor WA yang terdaftar!");
+            userRole = 'guru';
+            currentUserWa = wa;
+            closeGuruModal();
+            setupUI();
+        }
+
+        function setupUI() {
+            document.getElementById('portal-overlay').style.display = 'none';
+            document.getElementById('app-container').classList.remove('hidden-view');
+            
+            if (userRole === 'guru') {
+                document.getElementById('sidebar-title').innerText = "PORTAL PEGAWAI";
+                document.getElementById('menu-db').classList.add('hidden');
+                document.getElementById('menu-settings').classList.add('hidden');
+                document.getElementById('content-title').innerText = "Rekap Presensi Saya";
+                document.getElementById('content-subtitle').innerText = "Menampilkan riwayat absensi nomor: " + currentUserWa;
+                document.getElementById('searchInput').classList.add('hidden');
+            } else {
+                document.getElementById('sidebar-title').innerText = "ADMIN PANEL";
+                document.getElementById('menu-db').classList.remove('hidden');
+                document.getElementById('menu-settings').classList.remove('hidden');
+            }
+            fetchData();
+        }
+
+        function logout() {
+            if(confirm("Apakah Anda ingin keluar dari sistem?")) {
+                location.reload();
+            }
         }
 
         function saveSettings() {
-            const url = document.getElementById('apiUrl').value;
+            const url = document.getElementById('apiUrl').value.trim();
+            if(!url) return alert("URL tidak boleh kosong!");
             localStorage.setItem('presensi_api_url', url);
-            alert('Konfigurasi API berhasil disimpan!');
+            alert('Konfigurasi berhasil disimpan!');
             fetchData();
         }
 
         async function fetchData() {
             const apiUrl = localStorage.getItem('presensi_api_url');
             if (!apiUrl) {
-                showTab('settings');
+                if(userRole === 'admin') showTab('settings');
+                else alert("Admin belum melakukan konfigurasi API sistem.");
                 return;
             }
 
-            const btnText = document.getElementById('btn-text');
             const refreshIcon = document.getElementById('refresh-icon');
-            
-            btnText.innerText = "Memuat...";
             refreshIcon.classList.add('animate-spin');
 
             try {
-                // Menambahkan parameter ?action=read agar API GAS tahu kita ingin membaca data
                 const response = await fetch(`${apiUrl}?action=read`);
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    renderTable(result.data);
+                    allData = result.data;
+                    if (userRole === 'guru') {
+                        const myData = allData.filter(row => row.wa.toString() === currentUserWa);
+                        renderTable(myData);
+                    } else {
+                        renderTable(allData);
+                    }
                 }
             } catch (error) {
-                console.error('Error fetching data:', error);
-                alert('Gagal mengambil data. Pastikan URL API benar dan CORS diaktifkan di Apps Script.');
+                console.error(error);
+                alert('Gagal mengambil data. Periksa koneksi atau URL API.');
             } finally {
-                btnText.innerText = "Refresh Data";
                 refreshIcon.classList.remove('animate-spin');
             }
+        }
+
+        function filterData() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allData.filter(row => row.nama.toLowerCase().includes(val));
+            renderTable(filtered);
         }
 
         function renderTable(data) {
             const tbody = document.getElementById('rekapTableBody');
             tbody.innerHTML = '';
             
-            if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="p-8 text-center text-gray-400 italic">Belum ada data presensi hari ini.</td></tr>';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 italic">
+                    ${userRole === 'guru' ? 'Anda belum memiliki riwayat presensi.' : 'Data tidak ditemukan.'}
+                </td></tr>`;
                 return;
             }
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-100 hover:bg-gray-50 transition";
+                const jarakInt = parseInt(row.jarak) || 0;
+                const distColor = jarakInt > 150 ? 'text-red-600 font-bold' : 'text-gray-500';
+
                 tr.innerHTML = `
-                    <td class="p-4 text-sm text-gray-700">${row.tanggal}</td>
-                    <td class="p-4 font-medium text-gray-900">${row.nama}</td>
-                    <td class="p-4 text-center text-green-600 font-mono text-sm">${row.datang || '-'}</td>
-                    <td class="p-4 text-center text-orange-600 font-mono text-sm">${row.pulang || '-'}</td>
+                    <td class="p-4 text-sm text-gray-600 font-medium">${row.tanggal}</td>
+                    <td class="p-4 text-sm text-gray-900 font-semibold">${row.nama}</td>
+                    <td class="p-4 text-center text-green-600 font-mono text-sm font-bold">${row.datang || '--:--'}</td>
+                    <td class="p-4 text-center text-orange-600 font-mono text-sm font-bold">${row.pulang || '--:--'}</td>
+                    <td class="p-4 text-center text-xs ${distColor}">${jarakInt} m</td>
                     <td class="p-4 text-center">
-                        <span class="px-3 py-1 ${row.datang ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} rounded-full text-xs font-semibold">
+                        <span class="px-3 py-1 ${row.datang ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'} rounded-full text-[10px] font-bold uppercase tracking-tight">
                             ${row.status || 'Hadir'}
                         </span>
                     </td>
@@ -190,13 +325,10 @@
             });
         }
 
-        window.onload = () => {
-            const savedUrl = localStorage.getItem('presensi_api_url');
-            if (savedUrl) {
-                document.getElementById('apiUrl').value = savedUrl;
-                fetchData();
-            }
-        };
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
     </script>
 </body>
 </html>
