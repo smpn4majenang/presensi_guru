@@ -13,6 +13,8 @@
         .tab-content.active { display: block; }
         .login-overlay { display: flex; }
         .hidden-view { display: none !important; }
+        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .loading-pulse { animation: pulse-soft 2s infinite; }
     </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
@@ -21,21 +23,19 @@
     <div id="portal-overlay" class="fixed inset-0 bg-indigo-900 z-50 flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
             <div class="text-center mb-8">
-                <!-- Logo WhatsApp Menggunakan Lucide Message-Square -->
                 <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-50 shadow-inner">
                     <i data-lucide="message-circle" class="text-green-600 w-10 h-10 fill-green-600"></i>
                 </div>
-                <!-- Judul Diubah Menjadi Biru -->
                 <h1 class="text-2xl font-bold text-indigo-700 tracking-tight">Presensi Guru - Karyawan</h1>
-                <h2 class="text-lg font-semibold text-blue-700 -mt-1 ">SMP Negeri 4 Majenang</h2>
-                <p class="text-gray-500 text-sm mt-1">Sistem Presensi Berbasis WhatsApp</p>
+                <h2 class="text-lg font-semibold text-blue-700 -mt-1 uppercase">SMP Negeri 4 Majenang</h2>
+                <p class="text-gray-500 text-sm mt-1 italic font-medium">Sistem Presensi Sharelock WhatsApp</p>
             </div>
             
             <div class="space-y-4">
                 <button onclick="enterAs('guru')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-green-500 hover:bg-green-50 transition group">
                     <div class="flex items-center">
                         <i data-lucide="user" class="mr-3 text-gray-400 group-hover:text-green-600"></i>
-                        <span class="font-semibold text-gray-700">Masuk sebagai Guru/Karyawan</span>
+                        <span class="font-semibold text-gray-700 text-left">Masuk sebagai Guru/Karyawan</span>
                     </div>
                     <i data-lucide="chevron-right" class="text-gray-300"></i>
                 </button>
@@ -43,7 +43,7 @@
                 <button onclick="enterAs('admin')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition group">
                     <div class="flex items-center">
                         <i data-lucide="shield-check" class="mr-3 text-gray-400 group-hover:text-indigo-600"></i>
-                        <span class="font-semibold text-gray-700">Masuk sebagai Admin</span>
+                        <span class="font-semibold text-gray-700 text-left">Masuk sebagai Admin</span>
                     </div>
                     <i data-lucide="chevron-right" class="text-gray-300"></i>
                 </button>
@@ -61,12 +61,12 @@
             <h3 class="text-lg font-bold mb-2 flex items-center text-indigo-700">
                 <i data-lucide="phone" class="mr-2 text-green-600 w-5 h-5"></i> Cek Rekap Saya
             </h3>
-            <p class="text-xs text-gray-500 mb-4 font-medium uppercase">SMP NEGERI 4 MAJENANG</p>
-            <p class="text-xs text-gray-400 mb-4">Masukkan nomor WhatsApp yang Anda gunakan untuk presensi di sekolah.</p>
+            <p class="text-xs text-gray-500 mb-4 font-medium uppercase text-center border-b pb-2">SMP NEGERI 4 MAJENANG</p>
+            <p class="text-xs text-gray-400 mb-4">Masukkan nomor WhatsApp yang Anda gunakan untuk presensi.</p>
             <input type="text" id="guruWaInput" placeholder="Contoh: 62812345678" class="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-green-500">
             <div class="flex gap-2">
                 <button onclick="closeGuruModal()" class="flex-1 py-2 text-gray-400 font-medium">Batal</button>
-                <button onclick="loginGuru()" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md">Tampilkan Data</button>
+                <button onclick="loginGuru()" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 shadow-md">Lihat Data</button>
             </div>
         </div>
     </div>
@@ -117,10 +117,13 @@
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
                         <h2 class="text-2xl font-semibold text-gray-800" id="content-title">Rekap Presensi Harian</h2>
-                        <p class="text-sm text-gray-500" id="content-subtitle">Menampilkan riwayat sharelock dari WhatsApp</p>
+                        <div class="flex items-center mt-1">
+                            <span id="api-status-dot" class="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
+                            <p class="text-xs text-gray-500" id="api-status-text">Status: Mengecek koneksi...</p>
+                        </div>
                     </div>
                     <div class="flex gap-2 w-full md:w-auto">
-                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari data..." class="p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64">
+                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari nama..." class="p-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full md:w-64">
                         <button onclick="fetchData()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 flex items-center transition shadow-md">
                             <i data-lucide="refresh-cw" id="refresh-icon" class="mr-2 w-4"></i> <span id="btn-text">Refresh</span>
                         </button>
@@ -136,7 +139,7 @@
                                     <th class="p-4 font-semibold text-gray-600 text-xs uppercase tracking-wider">Nama</th>
                                     <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jam Datang</th>
                                     <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jam Pulang</th>
-                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jarak</th>
+                                    <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Jarak (Limit)</th>
                                     <th class="p-4 font-semibold text-gray-600 text-center text-xs uppercase tracking-wider">Status</th>
                                 </tr>
                             </thead>
@@ -153,12 +156,14 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-4">Pengelolaan Database Pegawai</h2>
                 <div class="bg-white p-8 rounded-xl border border-gray-200 shadow-sm">
                     <div class="flex items-center mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-                        <i data-lucide="external-link" class="text-indigo-600 mr-4"></i>
-                        <p class="text-indigo-900 text-sm">Manajemen data (Tambah/Hapus Guru & Karyawan) tetap dilakukan melalui tab <b>Database_Guru</b> di Google Spreadsheet Admin.</p>
+                        <i data-lucide="info" class="text-indigo-600 mr-4"></i>
+                        <p class="text-indigo-900 text-sm font-medium">Informasi Kolom Radius:</p>
                     </div>
-                    <p class="text-gray-500 text-sm leading-relaxed">
-                        Data disinkronkan secara real-time. Jika Anda baru saja mengubah data di spreadsheet, silakan tekan tombol <b>Refresh</b> pada menu Rekap Harian.
-                    </p>
+                    <ul class="list-disc ml-6 space-y-3 text-sm text-gray-600">
+                        <li>Buka spreadsheet dan tambahkan kolom <b>radius</b> di tab <b>Database_Guru</b>.</li>
+                        <li>Jika diisi <b>20000</b>, maka guru tersebut bisa presensi hingga jarak 20 KM.</li>
+                        <li>Jika dikosongkan, sistem menggunakan radius default (150 meter).</li>
+                    </ul>
                 </div>
             </div>
 
@@ -169,18 +174,11 @@
                     <div class="space-y-6">
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2 italic">URL Web App (Google Apps Script)</label>
-                            <input type="text" id="apiUrl" placeholder="https://script.google.com/macros/s/.../exec" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs">
+                            <input type="text" id="apiUrl" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none font-mono text-xs">
                         </div>
-                        <div class="p-4 bg-gray-50 rounded-lg">
-                            <h4 class="text-sm font-bold mb-2">Panduan Cepat:</h4>
-                            <ul class="text-xs text-gray-600 space-y-2 list-disc pl-4">
-                                <li>Pastikan Apps Script telah di-deploy sebagai "Web App".</li>
-                                <li>Setel "Who has access" ke "Anyone".</li>
-                                <li>Simpan URL deployment di sini untuk menghubungkan dashboard.</li>
-                            </ul>
-                        </div>
+                        <p class="text-xs text-gray-400 italic">URL ini telah terpasang secara permanen di sistem.</p>
                         <button onclick="saveSettings()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700 transition shadow-lg">
-                            Hubungkan Database
+                            Perbarui Konfigurasi (Opsional)
                         </button>
                     </div>
                 </div>
@@ -189,6 +187,9 @@
     </div>
 
     <script>
+        // URL ASLI ANDA DITEMPEL DISINI SEBAGAI DEFAULT
+        const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbzH10fvP4FjrCg94TnNl5cI4EbS-uFAwgHPrVXmeWfpomheYnbKJd3C6PE_CEfDswCY/exec";
+
         lucide.createIcons();
         let allData = [];
         let userRole = 'admin';
@@ -214,7 +215,7 @@
 
         function loginGuru() {
             const wa = document.getElementById('guruWaInput').value.trim();
-            if (!wa) return alert("Silakan masukkan nomor WA yang terdaftar!");
+            if (!wa) return alert("Silakan masukkan nomor WA!");
             userRole = 'guru';
             currentUserWa = wa;
             closeGuruModal();
@@ -230,40 +231,34 @@
                 document.getElementById('menu-db').classList.add('hidden');
                 document.getElementById('menu-settings').classList.add('hidden');
                 document.getElementById('content-title').innerText = "Rekap Presensi Saya";
-                document.getElementById('content-subtitle').innerText = "Menampilkan riwayat absensi nomor: " + currentUserWa;
                 document.getElementById('searchInput').classList.add('hidden');
-            } else {
-                document.getElementById('sidebar-title').innerText = "ADMIN PANEL";
-                document.getElementById('menu-db').classList.remove('hidden');
-                document.getElementById('menu-settings').classList.remove('hidden');
             }
             fetchData();
         }
 
         function logout() {
-            if(confirm("Apakah Anda ingin keluar dari sistem?")) {
-                location.reload();
-            }
+            location.reload();
         }
 
         function saveSettings() {
             const url = document.getElementById('apiUrl').value.trim();
             if(!url) return alert("URL tidak boleh kosong!");
             localStorage.setItem('presensi_api_url', url);
-            alert('Konfigurasi berhasil disimpan!');
+            alert('Konfigurasi diperbarui!');
             fetchData();
         }
 
         async function fetchData() {
-            const apiUrl = localStorage.getItem('presensi_api_url');
-            if (!apiUrl) {
-                if(userRole === 'admin') showTab('settings');
-                else alert("Admin belum melakukan konfigurasi API sistem.");
-                return;
-            }
+            // Gunakan URL tersimpan, atau default yang ditempel jika tidak ada yang tersimpan
+            const apiUrl = localStorage.getItem('presensi_api_url') || DEFAULT_API_URL;
+            const statusDot = document.getElementById('api-status-dot');
+            const statusText = document.getElementById('api-status-text');
+
+            if (!apiUrl) return;
 
             const refreshIcon = document.getElementById('refresh-icon');
             refreshIcon.classList.add('animate-spin');
+            statusDot.className = "w-2 h-2 rounded-full bg-amber-400 loading-pulse mr-2";
 
             try {
                 const response = await fetch(`${apiUrl}?action=read`);
@@ -271,16 +266,20 @@
                 
                 if (result.status === 'success') {
                     allData = result.data;
+                    statusDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
+                    statusText.innerText = `Status: Terhubung (${allData.length} baris)`;
+                    
                     if (userRole === 'guru') {
-                        const myData = allData.filter(row => row.wa.toString() === currentUserWa);
+                        const myData = allData.filter(row => row.wa.toString().includes(currentUserWa));
                         renderTable(myData);
                     } else {
                         renderTable(allData);
                     }
                 }
             } catch (error) {
-                console.error(error);
-                alert('Gagal mengambil data. Periksa koneksi atau URL API.');
+                statusDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
+                statusText.innerText = "Status: Gagal terhubung";
+                document.getElementById('rekapTableBody').innerHTML = `<tr><td colspan="6" class="p-12 text-center text-red-400">Gagal memuat data. Periksa koneksi internet atau status Apps Script.</td></tr>`;
             } finally {
                 refreshIcon.classList.remove('animate-spin');
             }
@@ -297,27 +296,32 @@
             tbody.innerHTML = '';
             
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 italic">
-                    ${userRole === 'guru' ? 'Anda belum memiliki riwayat presensi.' : 'Data tidak ditemukan.'}
-                </td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 italic">Data tidak ditemukan.</td></tr>`;
                 return;
             }
 
             data.forEach(row => {
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-100 hover:bg-gray-50 transition";
+                
                 const jarakInt = parseInt(row.jarak) || 0;
-                const distColor = jarakInt > 150 ? 'text-red-600 font-bold' : 'text-gray-500';
+                const userRadius = parseInt(row.radius) || 150; 
+                
+                const isOutOfRange = jarakInt > userRadius;
+                const distColor = isOutOfRange ? 'text-red-600 font-bold' : 'text-gray-500';
 
                 tr.innerHTML = `
                     <td class="p-4 text-sm text-gray-600 font-medium">${row.tanggal}</td>
                     <td class="p-4 text-sm text-gray-900 font-semibold">${row.nama}</td>
                     <td class="p-4 text-center text-green-600 font-mono text-sm font-bold">${row.datang || '--:--'}</td>
                     <td class="p-4 text-center text-orange-600 font-mono text-sm font-bold">${row.pulang || '--:--'}</td>
-                    <td class="p-4 text-center text-xs ${distColor}">${jarakInt} m</td>
+                    <td class="p-4 text-center">
+                        <div class="${distColor} text-xs">${jarakInt} m</div>
+                        <div class="text-[9px] text-gray-300 italic">Limit: ${userRadius}m</div>
+                    </td>
                     <td class="p-4 text-center">
                         <span class="px-3 py-1 ${row.datang ? 'bg-green-100 text-green-700' : 'bg-red-50 text-red-600'} rounded-full text-[10px] font-bold uppercase tracking-tight">
-                            ${row.status || 'Hadir'}
+                            ${row.status || (row.datang ? 'Hadir' : 'Mangkir')}
                         </span>
                     </td>
                 `;
@@ -328,7 +332,13 @@
         function showTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
+            lucide.createIcons();
         }
+
+        window.onload = () => {
+            const savedUrl = localStorage.getItem('presensi_api_url') || DEFAULT_API_URL;
+            document.getElementById('apiUrl').value = savedUrl;
+        };
     </script>
 </body>
 </html>
