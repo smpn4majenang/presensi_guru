@@ -1,271 +1,76 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Presensi Guru & Karyawan - SMP Negeri 4 Majenang</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/lucide@0.344.0/dist/umd/lucide.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .hidden-view { display: none !important; }
-        @keyframes pulse-soft { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        .loading-pulse { animation: pulse-soft 2s infinite; }
-    </style>
+<meta charset="UTF-8">
+<title>Rekap Presensi Guru</title>
+<style>
+body{font-family:Arial;padding:20px}
+table{border-collapse:collapse;width:100%;margin-top:15px}
+th,td{border:1px solid #ccc;padding:6px;text-align:center}
+.valid{background:#c8f7c5}
+.invalid{background:#f7c5c5}
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body>
 
-    <!-- Portal Selection -->
-    <div id="portal-overlay" class="fixed inset-0 bg-indigo-900 z-50 flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-            <div class="text-center mb-8">
-                <div class="bg-green-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-50 shadow-inner">
-                    <i data-lucide="message-circle" class="text-green-600 w-10 h-10 fill-green-600"></i>
-                </div>
-                <h1 class="text-2xl font-bold text-indigo-700">Presensi Guru</h1>
-                <h2 class="text-sm font-semibold text-blue-600 uppercase">SMP Negeri 4 Majenang</h2>
-            </div>
-            
-            <div class="space-y-4">
-                <button onclick="enterAs('guru')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-green-500 hover:bg-green-50 transition group">
-                    <div class="flex items-center">
-                        <i data-lucide="user" class="mr-3 text-gray-400 group-hover:text-green-600"></i>
-                        <span class="font-semibold text-gray-700">Guru / Karyawan</span>
-                    </div>
-                    <i data-lucide="chevron-right" class="text-gray-300"></i>
-                </button>
-                <button onclick="enterAs('admin')" class="w-full flex items-center justify-between p-4 border-2 border-gray-100 rounded-xl hover:border-indigo-500 hover:bg-indigo-50 transition group">
-                    <div class="flex items-center">
-                        <i data-lucide="shield-check" class="mr-3 text-gray-400 group-hover:text-indigo-600"></i>
-                        <span class="font-semibold text-gray-700">Administrator</span>
-                    </div>
-                    <i data-lucide="chevron-right" class="text-gray-300"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+<h2>Login Admin</h2>
+<input id="u" placeholder="Username">
+<input id="p" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 
-    <!-- Login Guru Modal -->
-    <div id="guru-login-modal" class="fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
-        <div class="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-            <h3 class="text-lg font-bold mb-4 flex items-center text-indigo-700">
-                <i data-lucide="phone" class="mr-2 text-green-600"></i> Masukkan No. WA
-            </h3>
-            <input type="text" id="guruWaInput" placeholder="Contoh: 62812345678" class="w-full p-3 border rounded-lg mb-4 outline-none focus:ring-2 focus:ring-green-500">
-            <div class="flex gap-2">
-                <button onclick="closeGuruModal()" class="flex-1 py-2 text-gray-400">Batal</button>
-                <button onclick="loginGuru()" class="flex-1 py-2 bg-green-600 text-white rounded-lg font-medium">Cek Data Saya</button>
-            </div>
-        </div>
-    </div>
+<div id="app" style="display:none">
+<h3>Rekap Presensi Guru</h3>
 
-    <div id="app-container" class="flex h-screen overflow-hidden hidden-view">
-        <aside class="w-64 bg-indigo-900 text-white flex-shrink-0 hidden md:flex flex-col">
-            <div class="p-6 border-b border-indigo-800 font-bold text-xl flex items-center">
-                <i data-lucide="layout-dashboard" class="mr-2"></i> <span id="sidebar-title">PANEL</span>
-            </div>
-            <nav class="flex-1 p-4 space-y-2">
-                <button onclick="showTab('rekap')" class="w-full flex items-center p-3 rounded-lg hover:bg-indigo-800 transition">
-                    <i data-lucide="calendar" class="mr-3"></i> Rekap Harian
-                </button>
-                <button onclick="logout()" class="w-full flex items-center p-3 rounded-lg text-red-300 hover:bg-red-900/30 mt-10">
-                    <i data-lucide="log-out" class="mr-3"></i> Keluar
-                </button>
-            </nav>
-        </aside>
+<table id="tbl">
+<thead>
+<tr>
+<th>Waktu</th>
+<th>Nama</th>
+<th>Jenis</th>
+<th>Jarak (m)</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
 
-        <main class="flex-1 overflow-y-auto p-4 md:p-8">
-            <div id="rekap" class="tab-content active">
-                <div class="flex justify-between items-center mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-gray-800" id="content-title">Data Presensi</h2>
-                        <div class="flex items-center text-xs text-gray-500 mt-1">
-                            <span id="api-status-dot" class="w-2 h-2 rounded-full bg-gray-400 mr-2"></span>
-                            <span id="api-status-text">Menghubungkan...</span>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="text" id="searchInput" onkeyup="filterData()" placeholder="Cari nama..." class="p-2 border rounded-lg text-sm hidden md:block w-48 lg:w-64 focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <button onclick="fetchData()" class="bg-indigo-600 text-white p-2 md:px-4 rounded-lg hover:bg-indigo-700 transition flex items-center">
-                            <i data-lucide="refresh-cw" id="refresh-icon" class="w-4 h-4 md:mr-2"></i> <span class="hidden md:inline">Refresh</span>
-                        </button>
-                    </div>
-                </div>
+<script>
+const URL = 'GANTI_DENGAN_URL_WEB_APP';
 
-                <div class="bg-white rounded-xl shadow-sm border overflow-hidden mb-6">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead class="bg-gray-50 border-b">
-                                <tr>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase">Tanggal</th>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase">Nama Guru</th>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Datang</th>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Pulang</th>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Radius Limit</th>
-                                    <th class="p-4 text-xs font-bold text-gray-500 uppercase text-center">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="rekapTableBody">
-                                <tr><td colspan="6" class="p-12 text-center text-gray-400 italic font-light">Sedang memuat data dari spreadsheet...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+function login(){
+  fetch(`${URL}?login=1&u=${u.value}&p=${p.value}`)
+  .then(r=>r.text())
+  .then(res=>{
+    if(res=='OK'){
+      document.getElementById('app').style.display='block';
+      loadData();
+    } else {
+      alert('Login gagal');
+    }
+  });
+}
 
-                <!-- Debug Output -->
-                <div id="debug-console" class="bg-slate-900 rounded-lg p-4 font-mono text-[10px] text-green-400 border border-slate-700 overflow-y-auto max-h-40 hidden">
-                    <p class="text-white border-b border-slate-700 pb-1 mb-2 font-bold uppercase tracking-widest flex justify-between">
-                        <span>Laporan Teknis (Diagnostik)</span>
-                        <span id="row-count-badge" class="text-yellow-400"></span>
-                    </p>
-                    <div id="debug-log"></div>
-                </div>
-            </div>
-        </main>
-    </div>
+function loadData(){
+  fetch(URL)
+  .then(r=>r.json())
+  .then(d=>{
+    const tb=document.querySelector('#tbl tbody');
+    tb.innerHTML='';
+    d.slice(1).forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.className=r[7]=='Valid'?'valid':'invalid';
+      tr.innerHTML=`
+        <td>${r[0]}</td>
+        <td>${r[1]}</td>
+        <td>${r[3]}</td>
+        <td>${r[6]}</td>
+        <td>${r[7]}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+</script>
 
-    <script>
-        const DEFAULT_API_URL = "https://script.google.com/macros/s/AKfycbwk3M6XpbcJqmWhIKOybhDct0KY5ckzvx61wX7IFf-Lk9JlEc1izhhtocSJEo8ZYg/exec";
-
-        lucide.createIcons();
-        let allData = [];
-        let userRole = 'admin';
-        let currentUserWa = '';
-
-        function logDebug(msg, isError = false) {
-            const consoleEl = document.getElementById('debug-console');
-            const logEl = document.getElementById('debug-log');
-            consoleEl.classList.remove('hidden');
-            logEl.innerHTML += `<p class="${isError ? 'text-red-400' : ''}">[${new Date().toLocaleTimeString()}] ${msg}</p>`;
-            consoleEl.scrollTop = consoleEl.scrollHeight;
-        }
-
-        function enterAs(role) {
-            if (role === 'guru') {
-                document.getElementById('guru-login-modal').style.display = 'flex';
-            } else {
-                const pass = prompt("Password Admin:");
-                if (pass === 'admin123') { userRole = 'admin'; setupUI(); }
-                else if (pass !== null) alert("Salah!");
-            }
-        }
-
-        function closeGuruModal() { document.getElementById('guru-login-modal').style.display = 'none'; }
-
-        function loginGuru() {
-            const wa = document.getElementById('guruWaInput').value.trim();
-            if (!wa) return;
-            userRole = 'guru';
-            currentUserWa = wa;
-            closeGuruModal();
-            setupUI();
-        }
-
-        function setupUI() {
-            document.getElementById('portal-overlay').style.display = 'none';
-            document.getElementById('app-container').classList.remove('hidden-view');
-            if (userRole === 'guru') {
-                document.getElementById('sidebar-title').innerText = "GURU";
-                document.getElementById('content-title').innerText = "Rekap Saya";
-            }
-            fetchData();
-        }
-
-        function logout() { location.reload(); }
-
-        async function fetchData() {
-            const statusDot = document.getElementById('api-status-dot');
-            const statusText = document.getElementById('api-status-text');
-            const refreshIcon = document.getElementById('refresh-icon');
-
-            refreshIcon.classList.add('animate-spin');
-            statusDot.className = "w-2 h-2 rounded-full bg-amber-400 loading-pulse mr-2";
-            logDebug("Mengambil data dari Google Sheets...");
-
-            try {
-                const response = await fetch(`${DEFAULT_API_URL}?action=read`);
-                const result = await response.json();
-                
-                logDebug(`Data Mentah: ${JSON.stringify(result).substring(0, 150)}...`);
-
-                if (result.status === 'success') {
-                    // Mapping Baru sesuai struktur Anda:
-                    // 0:Tanggal, 1:Nama, 2:WA, 3:Datang, 4:Pulang, 5:Status, 6:Radius
-                    allData = result.data.map(row => ({
-                        tanggal: row[0],
-                        nama: row[1],
-                        wa: row[2],
-                        datang: row[3],
-                        pulang: row[4],
-                        status: row[5],
-                        radius: row[6] || 150 // Fallback ke 150m jika kosong
-                    }));
-
-                    logDebug(`Berhasil memproses ${allData.length} baris.`);
-                    document.getElementById('row-count-badge').innerText = `${allData.length} DATA`;
-                    
-                    statusDot.className = "w-2 h-2 rounded-full bg-green-500 mr-2";
-                    statusText.innerText = `Terhubung (${allData.length} data)`;
-                    
-                    const displayData = userRole === 'guru' 
-                        ? allData.filter(d => d.wa && d.wa.toString().includes(currentUserWa))
-                        : allData;
-                        
-                    renderTable(displayData);
-                }
-            } catch (error) {
-                logDebug(`GAGAL: ${error.message}`, true);
-                statusDot.className = "w-2 h-2 rounded-full bg-red-500 mr-2";
-                statusText.innerText = "Koneksi Terputus";
-            } finally {
-                refreshIcon.classList.remove('animate-spin');
-            }
-        }
-
-        function filterData() {
-            const val = document.getElementById('searchInput').value.toLowerCase();
-            renderTable(allData.filter(d => d.nama && d.nama.toLowerCase().includes(val)));
-        }
-
-        function renderTable(data) {
-            const tbody = document.getElementById('rekapTableBody');
-            tbody.innerHTML = '';
-            
-            if (data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-12 text-center text-gray-400 italic">Belum ada data terekam.</td></tr>`;
-                return;
-            }
-
-            data.forEach(row => {
-                const tr = document.createElement('tr');
-                tr.className = "border-b hover:bg-gray-50 transition";
-                
-                // Jika status mengandung kata "Luar Radius", kita kasih highlight merah
-                const isOutOfRange = row.status && row.status.toLowerCase().includes('radius');
-
-                tr.innerHTML = `
-                    <td class="p-4 text-sm text-gray-600">${row.tanggal || '-'}</td>
-                    <td class="p-4 text-sm text-gray-900 font-semibold">${row.nama || '-'}</td>
-                    <td class="p-4 text-center text-green-600 font-mono font-bold">${row.datang || '--:--'}</td>
-                    <td class="p-4 text-center text-orange-600 font-mono font-bold">${row.pulang || '--:--'}</td>
-                    <td class="p-4 text-center text-xs text-gray-400">${row.radius}m</td>
-                    <td class="p-4 text-center">
-                        <span class="px-2 py-1 ${isOutOfRange ? 'bg-red-100 text-red-700' : (row.datang ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-400')} rounded text-[10px] font-bold uppercase tracking-tighter">
-                            ${row.status || (row.datang ? 'Hadir' : 'Mangkir')}
-                        </span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-        }
-    </script>
 </body>
 </html>
